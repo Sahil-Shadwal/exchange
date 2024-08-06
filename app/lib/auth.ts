@@ -14,6 +14,7 @@ export interface session extends Session {
 }
 
 export const authConfig = {
+  secret: process.env.NEXTAUTH_SECRET || "secr3t",
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
@@ -40,7 +41,6 @@ export const authConfig = {
       }
       return token;
     },
-    // @ts-ignore
     async signIn({ user, account, profile, email, credentials }: any) {
       if (account?.provider === "google") {
         const email = user.email;
@@ -48,7 +48,6 @@ export const authConfig = {
           return false;
         }
 
-        console.log({ user, account, profile, email, credentials });
         const userDb = await db.user.findFirst({
           where: {
             username: email,
@@ -58,6 +57,7 @@ export const authConfig = {
         if (userDb) {
           return true;
         }
+
         const keypair = Keypair.generate();
         const publicKey = keypair.publicKey.toBase58();
         const privateKey = keypair.secretKey;
@@ -66,7 +66,7 @@ export const authConfig = {
           data: {
             username: email,
             name: profile?.name,
-            // @ts-ignore
+            //@ts-ignore
             profilePicture: profile?.picture,
             provider: "Google",
             sub: account.providerAccountId,
@@ -76,15 +76,18 @@ export const authConfig = {
                 privateKey: privateKey.toString(),
               },
             },
-            InrWallet: {
-              create: {
-                balance: 0,
-              },
-            },
+            // inrWallet: {
+            //     create: {
+            //         balance: 0
+            //     }
+            // }
           },
         });
+
         return true;
       }
+
+      return false;
     },
   },
 };
